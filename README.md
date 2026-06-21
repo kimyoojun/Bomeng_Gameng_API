@@ -8,4 +8,7 @@ pip install "fastapi[standard]"
 ```
 pip install supabase
 ```
-
+### openAI 설치
+```
+pip install openai
+```
