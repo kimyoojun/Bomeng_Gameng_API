@@ -1,4 +1,4 @@
-from client import create_client, Client
+from supabase import create_client, Client
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
