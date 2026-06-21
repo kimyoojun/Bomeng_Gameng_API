@@ -1,10 +1,11 @@
 from fastapi import APIRouter
-from db.supabase import supabase
-from schemas.chat import ChatRequest
+from client import supabase, openai
+from schemas.chat import Chat
 from starlette.responses import JSONResponse as JSON
 
 router = APIRouter(prefix="/users/{user_id}/chats", tags=["chats"])
 
+# DB에서 chatting 기록을 select하는 코드
 @router.get("/")
 async def select_chat(user_id: str):
     response = (
@@ -15,22 +16,67 @@ async def select_chat(user_id: str):
     )
     
     return response.data
-    
+
+# DB에서 chatting 내역을 추가하는 코드
 @router.post("/")
-async def add_chat(user_id: str, req: ChatRequest):
+async def add_chat(user_id: str, req: Chat):
     try:
-        response = (
+        # 입력받은 질문을 openai api를 사용하여 전달후 답변을 받음
+        openais =  openai.responses.create(
+            model = "gpt-5.4",
+            input = req.content
+        )
+
+        # 대화 내역을 저장하기위해 이전 대화 내용을 불러옴
+        select = (
+            supabase.table("chatting")
+            .select("chat")
+            .eq("user_uuid", user_id)
+            .single()
+            .execute()
+        )
+
+        # 이전 대화내용을 chatting 변수에 저장
+        chatting = select.data["chat"]
+
+        # 이전 대화 내용 배열에 사용자의 질문을 추가하여 저장
+        chatting.append(req.model_dump())
+
+        ## 지금까지의 대화 내용을 DB에 저장 (사용자의 질문이 추가됨)
+        userResponse = (
             supabase.table("chatting")
             .update({
-                "chat": req.model_dump()["chats"]
+                "chat": chatting
             })
             .eq("user_uuid", user_id)
             .execute()
         )
-    except response.error:
+
+        # 지금까지의 대화 내용에 AI의 답변 내용을 저장
+        chatting.append({
+            "role": "assistant",
+            "content": openais.output_text
+        })
+
+        # 지금까지의 대화 내용을 DB에 저장(ai 답변이 추가됨)
+        aiResponse = (
+            supabase.table("chatting")
+            .update({
+                "chat": chatting
+            })
+            .eq("user_uuid", user_id)
+            .execute()
+        )
+
+    except Exception as e:
+        print(e)
         return JSON({"msg": "메세지 전송에 실패하였습니다."}, 500)
     else:
-        return JSON({"msg": "메세지전송에 성공하였습니다"}, 200)
+        return JSON({"msg": "메세지 전송에 성공하였습니다.",
+                     "data": chatting }, 200)
+
+    # finally:
+    #     print("성공")
 
     
 
