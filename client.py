@@ -11,5 +11,5 @@ supabase: Client = create_client(
 )
 
 openai = OpenAI(
-    os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
 )
