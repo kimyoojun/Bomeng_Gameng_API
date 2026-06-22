@@ -1,7 +1,9 @@
 from fastapi import APIRouter
-from client import supabase, openai
-from schemas.chat import Chat
 from starlette.responses import JSONResponse as JSON
+
+from client import supabase, openai
+from travel_ai import travel_ai
+from schemas.chat import Chat
 
 router = APIRouter(prefix="/users/{user_id}/chats", tags=["chats"])
 
@@ -22,10 +24,7 @@ async def select_chat(user_id: str):
 async def add_chat(user_id: str, req: Chat):
     try:
         # 입력받은 질문을 openai api를 사용하여 전달후 답변을 받음
-        openais =  openai.responses.create(
-            model = "gpt-5.4",
-            input = req.content
-        )
+        aiAnswer = travel_ai(req.content)
 
         # 대화 내역을 저장하기위해 이전 대화 내용을 불러옴
         select = (
@@ -55,7 +54,7 @@ async def add_chat(user_id: str, req: Chat):
         # 지금까지의 대화 내용에 AI의 답변 내용을 저장
         chatting.append({
             "role": "assistant",
-            "content": openais.output_text
+            "content": aiAnswer
         })
 
         # 지금까지의 대화 내용을 DB에 저장(ai 답변이 추가됨)
@@ -74,9 +73,3 @@ async def add_chat(user_id: str, req: Chat):
     else:
         return JSON({"msg": "메세지 전송에 성공하였습니다.",
                      "data": chatting }, 200)
-
-    # finally:
-    #     print("성공")
-
-    
-
