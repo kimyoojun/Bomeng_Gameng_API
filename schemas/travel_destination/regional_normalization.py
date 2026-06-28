@@ -1,4 +1,4 @@
-from travel_destination import REGION_ALIASES
+from schemas.travel_destination.travel_destination import REGION_ALIASES
 
 # 지역명을 정규화 하는 함수
 # 매개 변수로 REGION_ALIASES(지역별칭 정규화 맵)의 key(정규화전 지역별칭)값을 입력받음
