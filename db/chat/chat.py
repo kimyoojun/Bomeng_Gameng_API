@@ -1,5 +1,4 @@
 # 채팅기능중에서 DB에 저장하거나 DB에서 불러오는 코드를 작성
-from starlette.responses import JSONResponse as JSON
 
 from client import supabase
 
