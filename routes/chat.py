@@ -14,6 +14,7 @@ async def select_chat(user_id: str):
         supabase.table("chatting")
         .select("chat")
         .eq("user_uuid", user_id)
+        .single()
         .execute()
     )
     
